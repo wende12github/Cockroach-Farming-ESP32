@@ -327,6 +327,13 @@ void sendDataToFirebase()
     Firebase.RTDB.setBool(&fbdo, "/status/heater", heaterState);
     Firebase.RTDB.setString(&fbdo, "/status/system", "operational");
     Firebase.RTDB.setInt(&fbdo, "/status/lastUpdated", ts);
+
+    // Log historical data for analysis
+    String tempPath = "/logs/temperature/" + String(ts);
+    String humPath = "/logs/humidity/" + String(ts);
+
+    Firebase.RTDB.setFloat(&fbdo, tempPath.c_str(), temperature);
+    Firebase.RTDB.setFloat(&fbdo, humPath.c_str(), humidity);
   }
 
   Firebase.RTDB.setInt(&fbdo, "/system/rssi", WiFi.RSSI());
