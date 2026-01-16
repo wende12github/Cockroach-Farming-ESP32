@@ -98,11 +98,11 @@ void setup()
   pinMode(RED_LED, OUTPUT);
 
   Serial.println("Testing heater relay...");
-  digitalWrite(HEATER_PIN, LOW);
-  delay(3000);
   digitalWrite(HEATER_PIN, HIGH);
   delay(3000);
-  digitalWrite(HEATER_PIN, LOW);
+  digitalWrite(HEATER_PIN, heaterState ? HIGH : LOW);
+  delay(3000);
+  digitalWrite(HEATER_PIN, heaterState ? HIGH : LOW);
   // digitalWrite(HEATER_PIN, heaterState);
   digitalWrite(HUMIDIFIER_PIN, LOW);
   digitalWrite(GREEN_LED, LOW);
@@ -271,7 +271,7 @@ void applyControl()
   }
 
   ledcWrite(FAN_PWM_CHANNEL, fanSpeed);
-  digitalWrite(HEATER_PIN, HIGH);
+  digitalWrite(HEATER_PIN, heaterState ? HIGH : LOW);
   digitalWrite(HUMIDIFIER_PIN, humidifierState);
 }
 
