@@ -18,8 +18,8 @@ DHT dht(DHTPIN, DHTTYPE);
 #define RED_LED 12
 
 // WIFI
-#define WIFI_SSID "Balerion"
-#define WIFI_PASSWORD "00000000"
+#define WIFI_SSID "The"
+#define WIFI_PASSWORD "Ww12345678M"
 
 // FIREBASE - FILL THESE IN!
 #define DATABASE_URL "https://cockroach-farming-default-rtdb.firebaseio.com/"
@@ -66,6 +66,12 @@ bool alertActive = false;
 String alertMessage = "";
 unsigned long alertStartTime = 0;
 const unsigned long ALERT_DELAY = 60000;
+
+// NTP Configuration (for real timestamps)
+const char *ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 3 * 3600; // EAT is UTC+3 (Addis Ababa, Ethiopia)
+const int daylightOffset_sec = 0;
+
 void connectWiFi()
 {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -77,6 +83,19 @@ void connectWiFi()
   }
   Serial.println("\nWiFi Connected");
   Serial.println(WiFi.localIP());
+}
+
+void initNTP()
+{
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  Serial.print("Synchronizing time with NTP...");
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo))
+  {
+    Serial.println("Failed to obtain time");
+    return;
+  }
+  Serial.println("Time synchronized");
 }
 
 void setupFirebase()
