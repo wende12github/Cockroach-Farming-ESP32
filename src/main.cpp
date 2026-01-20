@@ -239,21 +239,51 @@ void checkAndTriggerAlert()
     {
       alertActive = true;
       if (temperature < tempLow)
-        alertMessage = "Too cold! Heater needed";
+        alertMessage = "Temperature too low – please turn on the heater";
       else if (temperature > tempHigh)
-        alertMessage = "Too hot! Cooling needed";
+        alertMessage = "Temperature too high – please start cooling / ventilation";
       else if (humidity < humLow)
-        alertMessage = "Too dry!";
+        alertMessage = "Humidity too low – air is too dry";
       else
-        alertMessage = "Too humid!";
+        alertMessage = "Humidity too high – air is too humid";
 
-      Serial.println("*** ALERT *** " + alertMessage);
+      Serial.println("*** ALERT ACTIVE *** " + alertMessage);
 
       if (Firebase.ready())
       {
+        // Update current alert status
         Firebase.RTDB.setBool(&fbdo, "/alert/active", true);
         Firebase.RTDB.setString(&fbdo, "/alert/message", alertMessage);
         Firebase.RTDB.setInt(&fbdo, "/alert/timestamp", millis());
+
+        // Push notification to alerts list for historical viewing
+        // Determine severity based on alert type
+        String severity = "warning";
+        if (temperature < tempLow || temperature > tempHigh)
+        {
+          severity = "critical";
+        }
+
+        // Create notification entry
+        String alertPath = "/alerts/" + String(millis());
+        Firebase.RTDB.setString(&fbdo, (alertPath + "/message").c_str(), alertMessage);
+        Firebase.RTDB.setBool(&fbdo, (alertPath + "/isRead").c_str(), false);
+        Firebase.RTDB.setInt(&fbdo, (alertPath + "/timestamp").c_str(), millis());
+        Firebase.RTDB.setString(&fbdo, (alertPath + "/severity").c_str(), severity);
+
+        // Add sensor info if available
+        if (!isnan(temperature))
+        {
+          Firebase.RTDB.setFloat(&fbdo, (alertPath + "/value").c_str(), temperature);
+          Firebase.RTDB.setString(&fbdo, (alertPath + "/sensor").c_str(), "temperature");
+          Firebase.RTDB.setString(&fbdo, (alertPath + "/unit").c_str(), "°C");
+        }
+        if (!isnan(humidity))
+        {
+          Firebase.RTDB.setFloat(&fbdo, (alertPath + "/value").c_str(), humidity);
+          Firebase.RTDB.setString(&fbdo, (alertPath + "/sensor").c_str(), "humidity");
+          Firebase.RTDB.setString(&fbdo, (alertPath + "/unit").c_str(), "%");
+        }
       }
     }
   }
@@ -263,7 +293,8 @@ void checkAndTriggerAlert()
     alertActive = false;
     alertMessage = "";
     alertStartTime = 0;
-    Serial.println("Alert cleared - conditions normal");
+
+    Serial.println("Alert cleared – environmental conditions returned to normal");
 
     if (Firebase.ready())
     {
